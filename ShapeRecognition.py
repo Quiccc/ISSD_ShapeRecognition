@@ -3,10 +3,25 @@ import cv2
 from cv2 import threshold
 import numpy as np
 
-def showShapes(imageName, contourThreshold):
-    image = cv2.imread(imageName) # Read the image as greyscale
-    image = cv2.resize(image, (1600,900)) # Resize the image to half the size
-    image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY) # Convert the image to greyscale
+def imageFilter(imageName, contourThreshold):
+    originalImage = cv2.imread("Shape.jpg")
+    originalImage = cv2.resize(originalImage, (1600,900))
+    originalImage = cv2.cvtColor(originalImage, cv2.COLOR_BGR2GRAY)
+
+    Intensity_Matrix = np.ones(originalImage.shape, dtype="uint8") * 90 #Scalar value for intensity of the image
+    if(imageName == "Bright Image"):
+        editedImage = cv2.add(originalImage, Intensity_Matrix) # Add the matrix to the image to make it brighter
+
+    else:
+        editedImage = cv2.subtract(originalImage, Intensity_Matrix) # Subtract the matrix from the image to make it darker
+
+    editedImage = showShapes(editedImage, contourThreshold) # Call the function to show the shapes
+
+    cv2.imshow(imageName, editedImage)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
+
+def showShapes(image, contourThreshold):
     gray = np.float32(image)
     _, threshold = cv2.threshold(image, contourThreshold,255, cv2.THRESH_BINARY) # Threshold for contour detection (210 for bright, 20 for dark)
 
@@ -27,7 +42,7 @@ def showShapes(imageName, contourThreshold):
                 if cv2.boundingRect(c)[2] > 10 and cv2.boundingRect(c)[3] > 10: # To skip drawing contours for small shapes
 
                 
-                    #cv2.drawContours(image, [c], 0, (0), 5) # Draw the contour of the shape
+                    cv2.drawContours(image, [c], 0, (0), 5) # Draw the contour of the shape
 
                     mask = np.zeros(gray.shape, dtype="uint8") # Create a mask of the shape to preserve original image
                     cv2.fillPoly(mask, [c], (255,255,255)) # Fill the shapes for easier corner detection
@@ -58,12 +73,8 @@ def showShapes(imageName, contourThreshold):
 
                     else:
                         cv2.putText(image, "Circle", (x - 20, y), cv2.FONT_HERSHEY_COMPLEX, 0.5, (0))
+                    
+    return image
 
-    cv2.imshow(imageName, image)
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
-
-imageName = "Shadow.jpg"
-showShapes(imageName, 20)
-imageName = "Bright.jpg"
-showShapes(imageName, 210)
+imageFilter("Bright Image", 200)
+imageFilter("Dark Image", 20)
